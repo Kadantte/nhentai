@@ -17,20 +17,12 @@ from doujinshi_dl.utils import (
 )
 
 
-def _check_env():
-    if not os.getenv('DOUJINSHI_DL_URL', ''):
-        logger.error('Please set the DOUJINSHI_DL_URL environment variable to specify the target URL.')
-        sys.exit(1)
-
-
 def main():
     banner()
 
     if sys.version_info < (3, 0, 0):
         logger.error('doujinshi-dl requires Python 3.x')
         sys.exit(1)
-
-    _check_env()
 
     plugin = get_first_plugin()
     parser = plugin.create_parser()
@@ -39,11 +31,15 @@ def main():
     options = cmd_parser()
 
     # Let the plugin configure its own CONFIG and register runtime values
+    # (this also sets core_config 'base_url' from env or plugin default)
     plugin.configure(options)
 
     # Read common config values registered by the plugin
     plugin_config = core_config.get('plugin_config', {})
     base_url = core_config.get('base_url', os.getenv('DOUJINSHI_DL_URL', ''))
+    if not base_url:
+        logger.error('No target URL configured. Set DOUJINSHI_DL_URL or install a plugin that provides a default URL.')
+        sys.exit(1)
     logger.info(f'Using mirror: {base_url}')
 
     # CONFIG['proxy'] may have been updated after cmd_parser()

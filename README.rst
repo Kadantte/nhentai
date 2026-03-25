@@ -225,5 +225,5 @@ To use a mirror, set the ``DOUJINSHI_DL_URL`` environment variable to your mirro
 .. |pypi| image:: https://img.shields.io/pypi/v/doujinshi-dl.svg
    :target: https://pypi.org/project/doujinshi-dl/
 
-.. |version| image:: https://img.shields.io/pypi/pyversions/doujinshi-dl.svg
+.. |version| image:: https://img.shields.io/badge/python-3.8%2B-blue.svg
    :target: https://pypi.org/project/doujinshi-dl/

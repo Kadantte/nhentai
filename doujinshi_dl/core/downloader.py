@@ -8,15 +8,23 @@ import zipfile
 import io
 
 from urllib.parse import urlparse
-from doujinshi_dl import constant
 from doujinshi_dl.core.logger import logger
 from doujinshi_dl.core.utils.db import Singleton
+from doujinshi_dl.core import config as core_config
 
 
-def _get_async_request():
-    """Late-import to allow the compatibility shim to wire the correct implementation."""
-    from doujinshi_dl.utils import async_request
-    return async_request
+async def _async_request(method, url, timeout=30, proxy=None):
+    """Minimal async HTTP helper using httpx directly."""
+    proxies = {'http://': proxy, 'https://': proxy} if proxy else None
+    async with httpx.AsyncClient(verify=False, proxies=proxies) as client:
+        headers = {}
+        cookie = core_config.get('plugin_config', {}).get('cookie', '')
+        useragent = core_config.get('plugin_config', {}).get('useragent', '')
+        if cookie:
+            headers['Cookie'] = cookie
+        if useragent:
+            headers['User-Agent'] = useragent
+        return await client.request(method, url, timeout=timeout, headers=headers, follow_redirects=True)
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -81,15 +89,15 @@ class Downloader(Singleton):
             filename = base_filename + extension
 
         try:
-            async_request = _get_async_request()
-            response = await async_request('GET', url, timeout=self.timeout, proxy=proxy)
+            response = await _async_request('GET', url, timeout=self.timeout, proxy=proxy)
 
             if response.status_code != 200:
                 path = urlparse(url).path
-                for mirror in constant.IMAGE_URL_MIRRORS:
+                image_url_mirrors = core_config.get('image_url_mirrors', [])
+                for mirror in image_url_mirrors:
                     logger.info(f"Try mirror: {mirror}{path}")
                     mirror_url = f'{mirror}{path}'
-                    response = await async_request('GET', mirror_url, timeout=self.timeout, proxies=proxy)
+                    response = await _async_request('GET', mirror_url, timeout=self.timeout, proxy=proxy)
                     if response.status_code == 200:
                         break
 
@@ -98,7 +106,8 @@ class Downloader(Singleton):
                 return -1, url
 
         except (httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError) as e:
-            if retried < constant.RETRY_TIMES:
+            retry_times = core_config.get('retry_times', 3)
+            if retried < retry_times:
                 logger.warning(f'Download {filename} failed, retrying({retried + 1}) times...')
                 return await self.download(
                     url=url,
@@ -108,7 +117,7 @@ class Downloader(Singleton):
                     proxy=proxy,
                 )
             else:
-                logger.warning(f'Download {filename} failed with {constant.RETRY_TIMES} times retried, skipped')
+                logger.warning(f'Download {filename} failed with {retry_times} times retried, skipped')
                 return -2, url
 
         except Exception as e:

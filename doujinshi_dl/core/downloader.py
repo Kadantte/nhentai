@@ -15,8 +15,11 @@ from doujinshi_dl.core import config as core_config
 
 async def _async_request(method, url, timeout=30, proxy=None):
     """Minimal async HTTP helper using httpx directly."""
-    proxies = {'http://': proxy, 'https://': proxy} if proxy else None
-    async with httpx.AsyncClient(verify=False, proxies=proxies) as client:
+    # httpx >=0.28 uses `proxy` (str), older versions used `proxies` (dict)
+    client_kwargs = {'verify': False}
+    if proxy:
+        client_kwargs['proxy'] = proxy
+    async with httpx.AsyncClient(**client_kwargs) as client:
         headers = {}
         cookie = core_config.get('plugin_config', {}).get('cookie', '')
         useragent = core_config.get('plugin_config', {}).get('useragent', '')

@@ -3,7 +3,7 @@ doujinshi-dl
 
 あなたも変態。 いいね?
 
-|license|
+|pypi| |version| |license|
 
 
 doujinshi-dl is a CLI tool for downloading doujinshi from mirror sites.
@@ -219,5 +219,11 @@ To use a mirror, set the ``DOUJINSHI_DL_URL`` environment variable to your mirro
     :align: center
 
 
-.. |license| image:: https://img.shields.io/github/license/ricterz/doujinshi-dl.svg
-   :target: https://github.com/RicterZ/doujinshi-dl/blob/master/LICENSE
+.. |license| image:: https://img.shields.io/github/license/ricterz/nhentai.svg
+   :target: https://github.com/RicterZ/nhentai/blob/master/LICENSE
+
+.. |pypi| image:: https://img.shields.io/pypi/v/doujinshi-dl.svg
+   :target: https://pypi.org/project/doujinshi-dl/
+
+.. |version| image:: https://img.shields.io/pypi/pyversions/doujinshi-dl.svg
+   :target: https://pypi.org/project/doujinshi-dl/
